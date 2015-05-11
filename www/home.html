@@ -21,7 +21,15 @@
 		<img src="img/fatlogo.png" style="width:200px;"/>
 	</div>
 
-	<div ng-click="showSheet()" class="find_loc">
+
+	<div class="find_loc" ng-show="isResume>0">
+			<div style="width:200px;height:200px;border-radius:200px;overflow:hidden;" id="resume_banner_btn">
+					<div style="height:100px;width:200px;" ng-click="startNew()"></div>
+					<div style="height:100px;width:200px;" ng-click="toCart()"></div>
+			</div>
+	</div>
+
+	<div ng-click="showSheet()" class="find_loc" ng-show="isResume==0">
 		<div style="width:200px;">
 				<img alt="FatBurger" src="img/homego.png" id="FatBurger" style="width:100%;height:200px"/>
 		</div>

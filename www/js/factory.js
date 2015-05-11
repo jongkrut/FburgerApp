@@ -96,6 +96,9 @@ angular.module('search',[]).factory('Search',function(){
 		getArea: function(){
 			return JSON.parse(localStorage.getItem("area"));
 		},
+		clearArea: function(){
+			localStorage.removeItem("area");
+		},
 		getAll: function(){
 			return localStorage.getItem("search");
 		},

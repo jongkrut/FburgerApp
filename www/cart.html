@@ -118,7 +118,8 @@
 				{{item.menu_name}} <span ng-show="item.size_id">({{item.size_id.size_name}})</span>
 			</div>
 			<div align="right" class="col table_col_right" style="width: 20% !important;border:none !important; padding-right:0px;">
-				<span style="float:right">{{item.menu_price * item.qty | currency : 'Rp ' : 0}}  {{item.size_id.size_price * item.qty | currency : 'Rp ' : 0}}</span>
+				<span style="float:right" ng-if="!item.size_id">{{item.menu_price * item.qty | currency : 'Rp ' : 0}}</span>
+				<span style="float:right" ng-if="item.size_id">{{item.size_id.size_price * item.qty | currency : 'Rp ' : 0}}</span>
 			</div>
 		</div>
 

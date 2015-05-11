@@ -1,4 +1,4 @@
-var url = "http://128.199.190.218/connector";
+var url = "http://128.199.67.183:8080/fb";
 var company_id = 2;
 var app = angular.module('indexApp', [
   "sdfilters",
@@ -132,12 +132,14 @@ app.config(function($urlRouterProvider,$ionicConfigProvider){
 
 app.run(function($rootScope,$ionicNavBarDelegate,$ionicSideMenuDelegate,$ionicPopover,$location,Customer,Search,Cart,$http,$ionicPlatform){
   $ionicPlatform.ready(function() {
-    Search.remove();
+     Search.remove();
+     Search.clearArea();
+     //Cart.clear();
 	   var logged = Customer.isLogged();
 		 if(logged == true) {
        Customer.refreshAddress();
 		 }
-     $http.get("http://128.199.235.202/area/fb.json",{cache:false}).success(function(data){
+     $http.get("http://128.199.235.202/area/fb.json").success(function(data){
         Search.setArea(data.fatburger);
      });
   });
@@ -154,7 +156,7 @@ app.run(function($rootScope,$ionicNavBarDelegate,$ionicSideMenuDelegate,$ionicPo
   $rootScope.toCart = function() {
     if(Cart.getTotalItems() > 0) {
       var outlet_id = Search.getOutlet();
-      $location.path('/cart/'+outlet_id+'/8');
+      $location.path('/cart/'+outlet_id+'/1');
     } else {
       $location.path('/');
     }
@@ -325,12 +327,13 @@ app.controller('midLoginCtrl',function($scope,$stateParams,$http,$location,Custo
     };
 });
 
-app.controller('homeCtrl',function($scope,$location,$ionicActionSheet,$ionicSideMenuDelegate,$ionicPopup,$ionicLoading,$http,$ionicModal,Customer,Search,$window){
+app.controller('homeCtrl',function($scope,$location,$ionicActionSheet,$ionicSideMenuDelegate,Cart,$ionicPopup,$ionicLoading,$http,$ionicModal,Customer,Search,$window){
 	$scope.logged_in = Customer.isLogged();
   $scope.areaJson = Search.getArea();
   $scope.searchType = Search.getType();
 	$scope.data  = {};
   Search.init();
+  $scope.isResume = Cart.getTotalItems();
 
 	$scope.$on('state.update', function () {
     	$scope.logged_in = false;
@@ -342,6 +345,10 @@ app.controller('homeCtrl',function($scope,$location,$ionicActionSheet,$ionicSide
 		$scope.customer = Customer.getCustomer();
 	}
 
+  $scope.startNew = function() {
+    Cart.clear();
+    $scope.isResume = 0;
+  };
 	$scope.show = function(template) {
 	    $ionicLoading.show({
 	      template: template
@@ -365,7 +372,7 @@ app.controller('homeCtrl',function($scope,$location,$ionicActionSheet,$ionicSide
        buttonClicked: function(index) {
         if(index==0) { //PICKUP
           Search.setType(1);
-          $scope.data.selected = 46;
+          $scope.data.selected = 1;
           $scope.openModal(1);
         }
         else { //DELIVERY
@@ -501,7 +508,7 @@ app.controller('restoCtrl',function($scope,$http,Search,Customer){
   $scope.$on('state.login', function () {
     	$scope.logged_in = true;
   });
-
+  console.log($scope.outlet_id);
   $scope.brand_id = 0;
 	var urlLogin = url + "/outletInfo.php?outlet_id="+$scope.outlet_id+"&callback=JSON_CALLBACK";
 	$http.jsonp(urlLogin).success(function(data) {
@@ -574,6 +581,8 @@ app.controller('orderCtrl',function($scope,$stateParams,$ionicModal,$http,Cart,$
 
 	$scope.openModal = function (data){
 		$scope.menu_id = data;
+    $scope.size_attribute = 0;
+    $scope.size_attribute_index = 0;
 		$scope.menu = {};
 		var urlLogin = url + "/menuInformation.php?menu_id="+$scope.menu_id+"&callback=JSON_CALLBACK";
 		$http.jsonp(urlLogin).success(function(data){
@@ -581,6 +590,13 @@ app.controller('orderCtrl',function($scope,$stateParams,$ionicModal,$http,Cart,$
 			$scope.menu.qty = 1;
 			if(data.menu.size.length>0) {
 				$scope.menu.size_id = $scope.menu.size[0];
+        for(var i = 0;i < data.menu.size.length;i++) {
+          if(data.menu.size[i].detailed == 1) {
+            $scope.size_attribute = data.menu.size[i].size_id;
+            $scope.menu.size_attribute_id = data.menu.size[i].size_attr[0];
+            $scope.size_attribute_index = i;
+          }
+        }
 			}
 			$scope.modal.show();
 		});
@@ -603,6 +619,10 @@ app.controller('orderCtrl',function($scope,$stateParams,$ionicModal,$http,Cart,$
   			delete inputs['attr'];
   		else
   			inputs.attr = temp;
+      if(inputs.size_id) {
+        if(inputs.size_id.detailed == 1)
+          delete inputs.size_id['size_attr'];
+      }
   		Cart.addItem(inputs);
   	  $scope.modal.hide();
   	  $scope.items = Cart.getTotalItems();
@@ -622,8 +642,12 @@ app.controller('orderCtrl',function($scope,$stateParams,$ionicModal,$http,Cart,$
 
 	$scope.$watch('menu',function(){
 	    var price_ea = $scope.menu.menu_price;
-	    if(typeof $scope.menu.size_id != "undefined")
-			price_ea = $scope.menu.size_id.size_price;
+	    if(typeof $scope.menu.size_id != "undefined") {
+			   price_ea = $scope.menu.size_id.size_price;
+         if($scope.menu.size_id.detailed == 1) {
+            price_ea = $scope.menu.size_attribute_id.price;
+          }
+      }
 	    var price_attr = 0;
 	    angular.forEach($scope.menu.attr,function(value,key){
 			if(value.selected == true) {
@@ -1214,19 +1238,20 @@ app.controller('storeListCtrl',function($scope,$rootScope,Search){
 });
 
 app.controller('menuCtrl',function($scope,$stateParams,$http,Customer){
-	$scope.brand_id = 10;
+	$scope.brand_id = 1;
 	$scope.logged_in = Customer.isLogged();
 	$scope.$on('state.update', function () {
     	$scope.logged_in = false;
     });
 	var urlLogin = url + "/outletMenuCategory.php?brand_id="+$scope.brand_id+"&callback=JSON_CALLBACK";
+  console.log(urlLogin);
 	$http.jsonp(urlLogin).success(function(data){
 		  $scope.menuCategories = data.category;
 	});
 });
 
 app.controller('menuCtrl2',function($scope,$stateParams,$ionicModal,$http,$ionicLoading,$location,Customer){
-	$scope.brand_id = 10;
+	$scope.brand_id = 1;
 	$scope.tab = $stateParams.category;
 	$scope.menuz = [];
 	$scope.menu = {};
