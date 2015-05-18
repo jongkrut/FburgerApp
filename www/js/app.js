@@ -15,7 +15,7 @@ app.config(['$httpProvider', function($httpProvider) {
       }
 ]);
 
-app.config(['$stateProvider', function($stateProvider) {
+app.config(function($stateProvider,$urlRouterProvider) {
 	$stateProvider.state('login', {
 					url : '/login',
 					templateUrl : 'login.html',
@@ -121,7 +121,8 @@ app.config(['$stateProvider', function($stateProvider) {
 						templateUrl : 'tc2.html',
 						controller : 'tcCtrl'
 	});
-}]);
+  $urlRouterProvider.otherwise('/');
+});
 
 app.config(function($urlRouterProvider,$ionicConfigProvider){
     $urlRouterProvider.when('', '/');
@@ -134,7 +135,7 @@ app.run(function($rootScope,$ionicNavBarDelegate,$ionicSideMenuDelegate,$ionicPo
   $ionicPlatform.ready(function() {
      Search.remove();
      Search.clearArea();
-     //Cart.clear();
+     Cart.clear();
 	   var logged = Customer.isLogged();
 		 if(logged == true) {
        Customer.refreshAddress();
