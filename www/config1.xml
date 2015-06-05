@@ -17,6 +17,7 @@
     <author href="http://satudelivery.com" email="cs@klik-eat.com">
         Fatburger Delivery
     </author>
+    <content src="index.html"/>
 
 	<gap:platform name="android" />
 

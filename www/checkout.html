@@ -55,7 +55,7 @@
 <div class="row">
 	<div class="col table_border_progress"></div>
 	<div class="col table_col_left bg_footer footer_left"> Total Order Amount </div>
-	<div class="col table_col_mid bg_footer footer_mid"> <span style="float:right;">{{totalPrice - discount_promo + tax_service_charge - cash_balance - points_redemption - promo_code + delivery_fee | currency : "Rp " : 0}} </span></div>
+	<div class="col table_col_mid bg_footer footer_mid"> <span style="float:right;">{{totalPrice - discount_promo + tax_service_charge + delivery_fee | currency : "Rp " : 0}} </span></div>
 	<div class="col table_col_right bg_footer footer_right"> </div>
 </div>
 
@@ -70,7 +70,9 @@
 </div>
 <div class="row">
 	<div class="col table_border_progress"></div>
-	<div class="col table_col table_footer"> <textarea ng-model="deliveryInstruction.data" style="width:100%;resize:none;height:70px;box-sizing:border-box;"></textarea> </div>
+	<div class="col table_col table_footer">
+		<textarea ng-model="deliveryInstruction.data" style="width:100%;resize:none;height:70px;box-sizing:border-box;"></textarea>
+	</div>
 </div>
 <div class="row">
 	<div class="col table_border_progress"></div>

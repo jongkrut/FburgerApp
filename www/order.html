@@ -28,7 +28,7 @@
             <hr style="margin:-20px 10px 0 10px;">
             <div ng-if="menu.size.length>0" class="list padding">
                 <label class="item  item-select select_size">
-                    <select ng-model="menu.size_id" name="size_id" class="size_input" required ng-options="sz.size_name for sz in menu.size">{{sz.size_name}}</select>
+                    <select ng-model="menu.size_id" name="size_id" class="size_input" required ng-options="sizeLabel(sz.size_name,sz.size_price) for sz in menu.size"></select>
                 </label>
 
                 <label class="item  item-select select_size" ng-show="size_attribute == menu.size_id.size_id">
@@ -38,9 +38,9 @@
             <hr ng-show="menu.size.length>0" style="margin:-20px 10px 0;">
 
             <div ng-if="menu.attr.length>0" class="list" style="background-color:transparent">
-                <label class="item item-input font-white" style="background-color:transparent;border:0"> Add Ons</label>
+                <label class="item item-input font-white" style="background-color:transparent;border:0;"> Add Ons</label>
                 <ion-checkbox style="background-color:transparent;border:0" ng-repeat="att in menu.attr" name="attr_id" id="checkbox_{{$index}}" ng-model="att.selected" value="{{att.attribute_id}}" type="checkbox" class="checkbox-energized"/>
-                    <span style="font-size:14px" class="font-white">{{att.attribute_name}} {{att.attribute_price | currency : 'Rp ' : 0}}</span>
+                    <span style="font-size:15px" class="font-white">{{att.attribute_name}} +{{att.attribute_price | currency : 'Rp ' : 0}}</span>
                 </ion-checkbox>
             </div>
         	<hr ng-show="menu.attr.length>0" style="margin:-20px 10px 0 10px;">

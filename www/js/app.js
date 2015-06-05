@@ -133,9 +133,9 @@ app.config(function($urlRouterProvider,$ionicConfigProvider){
 
 app.run(function($rootScope,$ionicNavBarDelegate,$ionicSideMenuDelegate,$ionicPopover,$location,Customer,Search,Cart,$http,$ionicPlatform){
   $ionicPlatform.ready(function() {
-     Search.remove();
-     Search.clearArea();
-     Cart.clear();
+     //Search.remove();
+     //Search.clearArea();
+     //Cart.clear();
 	   var logged = Customer.isLogged();
 		 if(logged == true) {
        Customer.refreshAddress();
@@ -172,6 +172,8 @@ app.run(function($rootScope,$ionicNavBarDelegate,$ionicSideMenuDelegate,$ionicPo
 	};
 
 	$rootScope.logout = function() {
+    Cart.clear();
+    Search.remove();
 		Customer.logout();
 	};
 });
@@ -187,6 +189,7 @@ app.controller('panelCtrl',function($scope,$location,Customer){
 });
 
 app.controller('addressCtrl',function($scope,$http,$location,Customer,$ionicSideMenuDelegate,Search){
+  $scope.showDelete = false;
 	$scope.logged_in = Customer.isLogged();
 	$scope.$on('state.update', function () {
     	$scope.logged_in = false;
@@ -391,7 +394,7 @@ app.controller('homeCtrl',function($scope,$location,$ionicActionSheet,$ionicSide
   $scope.showAlert = function() {
      var confirmPopup = $ionicPopup.alert({
        title: 'Delivery Service',
-       template: 'Sorry, we don\'t deliver to your location<br/>If you believe this is a mistake, please choose the manual input.'
+       template: 'Sorry, we don\'t deliver to your location<br/>If you believe this is a mistake, please enable GPS/Location or choose the manual input.'
      });
   };
 
@@ -527,7 +530,7 @@ app.controller('restoCtrl',function($scope,$http,Search,Customer){
 	};
 });
 
-app.controller('orderCtrl',function($scope,$stateParams,$ionicModal,$http,Cart,$ionicLoading,$location,Customer){
+app.controller('orderCtrl',function($scope,$stateParams,$ionicModal,$http,Cart,$ionicLoading,$location,Customer,$filter){
 	$scope.outlet_id = $stateParams.outlet_id;
 	$scope.brand_id = $stateParams.brand_id;
 	$scope.tab = $stateParams.as;
@@ -589,8 +592,8 @@ app.controller('orderCtrl',function($scope,$stateParams,$ionicModal,$http,Cart,$
 		$http.jsonp(urlLogin).success(function(data){
 			$scope.menu = data.menu;
 			$scope.menu.qty = 1;
+      console.log(data.menu);
 			if(data.menu.size.length>0) {
-				$scope.menu.size_id = $scope.menu.size[0];
         for(var i = 0;i < data.menu.size.length;i++) {
           if(data.menu.size[i].detailed == 1) {
             $scope.size_attribute = data.menu.size[i].size_id;
@@ -598,6 +601,11 @@ app.controller('orderCtrl',function($scope,$stateParams,$ionicModal,$http,Cart,$
             $scope.size_attribute_index = i;
           }
         }
+        //if($scope.size_attribute_index > 0) {
+          //var fitem = {"size_name":"Ala Carte or Deals","size_id":"0"};
+          //$scope.menu.size.splice(0,0,fitem);
+        //}
+				$scope.menu.size_id = $scope.menu.size[0];
 			}
 			$scope.modal.show();
 		});
@@ -608,8 +616,15 @@ app.controller('orderCtrl',function($scope,$stateParams,$ionicModal,$http,Cart,$
   	};
 
   	$scope.addToCart = function (inputs) {
+      console.log(inputs);
   		delete inputs['size'];
   		delete inputs['menu_description'];
+
+      if(inputs.size_id) {
+        if(inputs.size_id.detailed == 1)
+          delete inputs.size_id['size_attr'];
+      }
+
   		var temp = [];
   		angular.forEach(inputs.attr,function(value,key){
   			if(value.selected == true) {
@@ -620,10 +635,7 @@ app.controller('orderCtrl',function($scope,$stateParams,$ionicModal,$http,Cart,$
   			delete inputs['attr'];
   		else
   			inputs.attr = temp;
-      if(inputs.size_id) {
-        if(inputs.size_id.detailed == 1)
-          delete inputs.size_id['size_attr'];
-      }
+
   		Cart.addItem(inputs);
   	  $scope.modal.hide();
   	  $scope.items = Cart.getTotalItems();
@@ -665,6 +677,12 @@ app.controller('orderCtrl',function($scope,$stateParams,$ionicModal,$http,Cart,$
 	$scope.goToCart = function() {
 		$location.path("/cart/"+$scope.outlet_id+"/"+$scope.brand_id);
 	};
+  $scope.sizeLabel = function(name,price) {
+    if(price == undefined)
+      return name;
+    else
+      return name + ' Rp ' + $filter('number')(price);
+  };
 }).directive('cartcontents',function() {
 	return {
 		restrict : 'E',
@@ -822,7 +840,6 @@ app.controller('cartCtrl',function($scope,$http,$stateParams,$ionicModal,$ionicL
   });
 
 
-
 	$scope.deleteItem = function(index) {
 		Cart.removeItem(index);
 		$scope.items = Cart.getAll();
@@ -955,6 +972,7 @@ app.controller('checkoutCtrl',function($scope,$http,$stateParams,$ionicPopup,$io
   $scope.serviceType = Search.getType();
   $scope.order_datetime = moment.unix(Cart.getDeliveryTime()).format('YYYY-MM-DD H:mm:ss');
   $scope.order_type = Cart.getDeliveryType();
+  $scope.discount_promo = 0;
 	$scope.logged_in = Customer.isLogged();
 	$scope.addressInput = {};
 	$scope.deliveryInstruction = {};
@@ -972,7 +990,9 @@ app.controller('checkoutCtrl',function($scope,$http,$stateParams,$ionicPopup,$io
 
   if($scope.serviceType == 1) {
     $scope.pickupLocation = Search.getOutletDetails();
+    $scope.delivery_fee = 0;
   } else {
+    $scope.delivery_fee = 19800;
     $scope.deliveryAddress = Search.getDeliveryAddress();
     if($scope.deliveryAddress!=0) {
       $scope.addr = Customer.getAddressById($scope.deliveryAddress);
@@ -1007,17 +1027,20 @@ app.controller('checkoutCtrl',function($scope,$http,$stateParams,$ionicPopup,$io
 		test.items = Cart.getAll();
 		test.customer_id = Customer.getCustomerID();
 		test.outlet_id = $scope.outlet_id;
-		test.brand_id = $scope.brand_id;
 		test.tax_service_charge = $scope.tax_service_charge;
 		test.delivery_fee = $scope.delivery_fee;
+    test.grandtotal = $scope.totalPrice - $scope.discount_promo + $scope.tax_service_charge + $scope.delivery_fee;
 		test.deliveryInstruction = $scope.deliveryInstruction.data;
 		test.payment_method = "cash";
 		test.subtotal = Cart.getTotalPrice();
-		test.order_type = Cart.getDeliveryType();
+		test.order_type = $scope.serviceType;
 		test.order_datetime = Cart.getDeliveryTime();
-    test.service_type = Search.getServiceType();
+    test.service_type = $scope.serviceType;
     if(test.service_type  == 2)
       test.address_id = Search.getDeliveryAddress();
+    else {
+      test.address_id = 0;
+    }
 
 		$http({
 		    url: url + "/placeOrder.php",
@@ -1142,7 +1165,9 @@ app.controller('newAddressCtrl',function($scope,$http,$ionicLoading,$ionicModal,
 		.then(function(response) {
 			if(response.data.address_id > 0) {
 				Customer.setAddress(response.data.address);
+
 			}
+      console.log(response);
 		});
 		$location.path('/my-address');
   	}

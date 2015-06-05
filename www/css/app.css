@@ -274,14 +274,16 @@
 #map { height: 500px; width:100%;}
 
 .select_size {
-	height:50px;
+	height:53px;
+  margin-top:10px;
 }
 .size_input {
 	max-width:100% !important;
 	width:100% !important;
 	left:0 !important;
 	text-align:left;
-	font-size:14px !important;
+	font-size:16px !important;
+  color:#2f2f2f !important;
 }
 .sidecolor {
     position:relative;
@@ -490,7 +492,7 @@ legend {
 
 .table_col{
 	flex:none;
-	width:93.1%;
+	width:93%;
 	color: #444;
 	background-color:white;
 	border-left: 1px #bdbdbd solid;
@@ -518,7 +520,7 @@ legend {
 
 .table_col_right{
 	flex:none;
-	width:9.1%;
+	width:9%;
 	color: #444;
 	background-color:white;
 	border-right: 1px #bdbdbd solid;
